@@ -94,7 +94,7 @@ function SelfPromotion() {
 type DataChoice = "Starwars" | "Cats";
 
 const starwarsCategories = [
-  { storeKey: "peopleStore", label: "People", svg: <UserOutlined />},
+  { storeKey: "peopleStore", label: "People", svg: <UserOutlined className="icon user" />},
   { storeKey: "starshipStore", label: "Starships", svg: <RocketSVG /> },
   { storeKey: "planetStore", label: "Planets", svg: <PlanetSVG />},
   { storeKey: "speciesStore", label: "Species", svg: <SpeciesSVG /> },
@@ -105,7 +105,7 @@ const starwarsCategories = [
 function App() {
   const [storeKey, setStoreKey] = useState<"starshipStore" | "peopleStore" | "planetStore" | "speciesStore" | "vehicleStore" | "filmStore">("peopleStore");
   const [dataChoice, setDataChoice] = useState<DataChoice>("Starwars");
-  const [siderWidth, setSiderWidth] = useState(200);
+  const [siderWidth, setSiderWidth] = useState(250);
 
   function ChangeCategory (value:string) 
   {
@@ -141,8 +141,8 @@ function App() {
           <Space style={{width: "100%"}} size={2} direction='vertical'>
                 {
                   dataChoice == "Starwars" ?
-                    starwarsCategories.map(sc => 
-                      <SiderButton onClick={() => setStoreKey(sc.storeKey as any)} className={sc.storeKey == storeKey ? "selected" : ""}>
+                    starwarsCategories.map((sc, index) => 
+                      <SiderButton key={index} onClick={() => setStoreKey(sc.storeKey as any)} className={sc.storeKey == storeKey ? "selected" : ""}>
                         <div className='icon'>
                           {sc.svg}
                         </div>
@@ -191,7 +191,7 @@ function App() {
 
 const SiderButtonStyle = Styled.div`
   color: white;
-  padding: 7px 10px;
+  padding: 12.5px 10px;
   background-color: rgba(170,170,170,0.025);
   width: 100%;
   border-radius: 2px;
@@ -210,13 +210,30 @@ const SiderButtonStyle = Styled.div`
 
   &.selected {
     box-shadow: 0px 0px 0px 1000px rgba(170,170,170,0.5) inset;
+
+    .icon {
+      fill: white;
+
+      &.user {
+        color: white;
+      }
+    }
   }
 
   .icon {
-    height: 15px;
-    width: 15px;
-    fill: white;
+    height: 25px;
+    width: 25px;
+    fill: silver;
     float: left;
+
+    &.user {
+      position: relative;
+      left: 2px;
+      height: unset;
+      width: unset;
+      font-size: 25px;
+      color: silver;
+    }
   }
 `;
 type SiderButtonProps = {

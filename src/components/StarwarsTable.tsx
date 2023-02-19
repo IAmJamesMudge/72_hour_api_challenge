@@ -1,15 +1,16 @@
-import { Card, Checkbox, Popover, Select, Table, Tag, Tooltip } from "antd";
+import { Card, Checkbox, message, Popover, Select, Space, Table, Tag, Tooltip } from "antd";
 import { ColumnGroupType, ColumnsType, ColumnType } from "antd/es/table";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {ExtractID, People,  StoreType,  SWBaseAPIRecord,  SWStore,  useStarWarsStores, FilterStoreData, GetColumnsImmutable} from "../APIs/starwars";
 import styled from "styled-components";
 import SpinFC from "antd/es/spin";
 import Input from "antd/es/input";
-import { CloseCircleOutlined, PlusCircleOutlined, SearchOutlined } from "@ant-design/icons";
+import { CloseCircleOutlined, DeleteOutlined, PlusCircleOutlined, SearchOutlined } from "@ant-design/icons";
 import Button from "antd/es/button";
 import { DefaultOptionType } from "antd/es/select";
 import useDeletedRecordTracker from "../Hooks/DeletedRecordTracker";
 import useFocusedRecorderTracker from "../Hooks/FocusRecordTracker";
+import useMessage from "antd/es/message/useMessage";
 
 const storeToSearchableFields:Map<StoreType,string[]> = new Map([
   ["peopleStore",["name"]],
@@ -27,9 +28,68 @@ const ContainerStyle = styled.div`
     margin: 12px;
     padding: 2px 6px;
     border: 1px solid rgba(170,170,170,0.2);
+    transition: all 0.1s linear;
 
-    & * {
-      user-select: none;
+
+    box-shadow: 0px 0px 4px 4px rgba(170,170,170,0.05) inset, 0px 0px 4px 4px rgba(170,170,170,0);
+
+    th.checkbox, td.checkbox {
+        display: none;
+    }
+    &[data-action-mode]:not([data-action-mode="Normal"]) {
+      th.checkbox, td.checkbox {
+        display: table-cell;
+      }
+    }
+    /* &[data-action-mode="Normal"] {
+      th.checkbox, td.checkbox {
+        width: 30px;
+      }
+    } */
+
+    &[data-action-mode]:not([data-action-mode="Normal"]) {
+      tr {
+      transition: all 0.1s linear;
+      box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.0) inset !important;
+      cursor: pointer;
+      & .ant-table-column-sort {
+        background-color: transparent;
+      }
+      }
+      tr.selected {
+        box-shadow: 0px 0px 10px 10px rgba(20,20,100,0.1) inset !important;
+        & td.ant-table-cell-row-hover {
+          background-color: rgba(0,0,0,0.1) !important;
+        }
+        & td.ant-table-cell-fix-left {
+          background-color: rgba(255,255,255,1) !important;
+          box-shadow: 0px 0px 10px 10px rgba(20,20,100,0.1) inset !important;
+        }
+      }
+      tr.active {
+        box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.075) inset !important;
+        & td.ant-table-cell-row-hover {
+          background-color: rgba(0,0,0,0.05) !important;
+        }
+        & td.ant-table-cell-fix-left {
+        box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.075) inset !important;
+        }
+      }
+      th.trash-column, td.trash-column {
+        display: none;
+      }
+      & * {
+        user-select: none;
+      }
+    }
+    &[data-action-mode="Delete"] {
+      border: 1px solid rgba(255,170,170,0.3);
+      box-shadow: 0px 0px 4px 4px rgba(255,170,170,0.2) inset, 0px 0px 4px 4px rgba(255,170,170,0.2);
+
+    }
+    &[data-action-mode="Restore"] {
+      border: 1px solid rgba(36, 170, 36, 0.3);
+      box-shadow: 0px 0px 4px 4px rgba(36, 170, 36,0.2) inset, 0px 0px 4px 4px rgba(36, 170, 36,0.2);
     }
   }
   .headerContainer {
@@ -50,14 +110,12 @@ const ContainerStyle = styled.div`
     & .deleteButton {
       color: rgba(220,20,20,1.0);
       border-color: red;
-      font-weight: 400;
       transition: all 0.1s linear;
       box-shadow: 0px 0px 10px 5px rgba(255,0,0,0.0) inset;
       margin-left: 10px;
 
       &:hover {
         color: rgba(240,20,20,1.0);
-        font-weight: 600;
       }
       &:active {
         color: rgba(255,0,0,1.0);
@@ -72,13 +130,11 @@ const ContainerStyle = styled.div`
       margin-right: 10px;
       color: rgba(10,120,10,1.0);
       border-color: green;
-      font-weight: 400;
       transition: all 0.1s linear;
         box-shadow: 0px 0px 10px 5px rgba(255,0,0,0.0) inset;
 
       &:hover {
         color: rgba(20,130,20,1.0);
-        font-weight: 600;
       }
       &:active {
         color: rgba(0,150,0,1.0);
@@ -111,27 +167,21 @@ const ContainerStyle = styled.div`
     &.cancel {
       top: 0px;
     }
-  }
 
-  tr {
-    transition: all 0.1s linear;
-    box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.0) inset !important;
-    cursor: pointer;
-
-    & .ant-table-column-sort {
-      background-color: transparent;
-    }
-  }
-  tr.selected {
-    box-shadow: 0px 0px 10px 10px rgba(20,20,100,0.1) inset !important;
-    & td.ant-table-cell-row-hover {
-      background-color: rgba(0,0,0,0.1) !important;
-    }
-  }
-  tr.active {
-    box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.075) inset !important;
-    & td.ant-table-cell-row-hover {
-      background-color: rgba(0,0,0,0.05) !important;
+    &.trash {
+      color: rgba(170,30,30,1);
+      border-radius:2px;
+      padding: 3px;
+      top: 0px;
+      left: 3px;
+      &:hover {
+        box-shadow: 0px 0px 5px 5px rgba(60,0,0,0.05) inset;
+      }
+      &:active {
+        transition: all 0.05s linear;
+        box-shadow: 0px 0px 5px 5px rgba(60,0,0,0.1) inset;
+        color: rgba(190,50,50,1);
+      }
     }
   }
   
@@ -147,7 +197,7 @@ const ContainerStyle = styled.div`
 const TableFooter = styled.div`
   display: flex;
   flex-basis: 1;
-  justify-content: space-around;
+  justify-content: space-between;
 `;
 
 export const ArrayWithoutNulls = (arr:any[]) => {
@@ -158,8 +208,14 @@ type SortedFieldType = {
   field:string;
   direction:"ascend"|"descend";
 }
-type FocusType = "None"|"Drilldown"|"Search"|"SearchAndDrilldown";
-type DrilldownType = {
+// the user can view data normally, search for data, or "Drill Down" a category
+// which will show the data on another table related to the drilled down record
+type FocusMode = "Normal"|"Drilldown"|"Search"|"SearchAndDrilldown";
+// the user can specifically view all data, the deleted data only, or the focused data only
+type ViewMode = "Normal"|"Deleted";
+// the user can either be viewing normally or selecting records
+type ActionMode = "Normal"|"Delete"|"Restore"
+type DrilldownDetail = {
   drilledCategory:StoreType;
   originalCategory:StoreType;
   requestingRecord:SWBaseAPIRecord;
@@ -193,11 +249,11 @@ function StarwarsTable({category, changeCategory}:Props) {
     focusedRecordStore[category], 
     true) as SWBaseAPIRecord[]
   );
-  const drilldownRequest = useRef<DrilldownType|null>(null);
+  const drilldownRequest = useRef<DrilldownDetail|null>(null);
   const tableRef = useRef<HTMLDivElement>(null as any);
   const horizontalScroll = useRef(0);
-  //const [focusedMessage, setFocusedMessage] = useState<string|null>("");
-  
+  const [viewMode, setViewMode] = useState<ViewMode>("Normal");
+  const [actionMode, setActionMode] = useState<ActionMode>("Normal");
   const sortedField = useRef<SortedFieldType>({field: "", direction: "ascend"});
   const lastClickedColData = useRef<ColumnGroupType<any> | ColumnType<any> | undefined>(undefined);
 
@@ -305,9 +361,8 @@ function StarwarsTable({category, changeCategory}:Props) {
           />
         )
       },
-      dataIndex: "",
       key: "select",
-      fixed: "left",
+      //fixed: "left",
       render: (text, record) => {
         let checked = selectedRecordReference.current.indexOf(ExtractID(record.url)) != -1;
         return <Checkbox checked={checked}/>
@@ -340,8 +395,28 @@ function StarwarsTable({category, changeCategory}:Props) {
           }
         }
       },
+      className: "checkbox"
       
-      
+    },
+    {
+      title: "Delete",
+      key: "delete",
+      //fixed: "left",
+      width: 200,
+      className: "trash-column",
+      render: (val, record, index) => {
+
+        const handleClick = () => {
+          const id = ExtractID(record.url);
+          deletedRecordStore.AddTracker(category,id);
+
+          console.log("Adding deleted: ", category, id);
+        }
+
+        return (
+          <DeleteOutlined onClick={handleClick} className='trash icon'/>
+        )
+      }
     }
   ];
   const sharedColumnsBack:ColumnsType<any> = [
@@ -432,6 +507,7 @@ function StarwarsTable({category, changeCategory}:Props) {
                   originalCategory: category,
                   requestingRecord: record
                 }
+                setActionMode("Normal");
 
                 changeCategory(val as any);
               }
@@ -451,9 +527,9 @@ function StarwarsTable({category, changeCategory}:Props) {
     return Math.ceil(count / 10);
   }
 
-  function GetFocusStatus():FocusType 
+  function GetFocusStatus():FocusMode 
   {
-    let focus:FocusType = "None";
+    let focus:FocusMode = "Normal";
 
     if (focusedRecordStore[category].length > 0) 
     {
@@ -493,7 +569,7 @@ function StarwarsTable({category, changeCategory}:Props) {
 
     switch (focusType) 
     {
-      case "None":
+      case "Normal":
         message = 
           <div style={{opacity: 0.4}}>
             {`Viewing ${prettyCategory.toUpperCase()}`}
@@ -564,11 +640,12 @@ function StarwarsTable({category, changeCategory}:Props) {
         storeToSearchableFields.get(category),
         deletedRecordStore[category],
         focusedRecordStore[category],
-        true
+        true,
+        actionMode
       );
 
     setFilteredCache(filteredData as SWBaseAPIRecord[]);
-  },[deletedRecordStore, focusedRecordStore, category, starwarsStore[category].cache, filter])
+  },[deletedRecordStore, focusedRecordStore, category, starwarsStore[category].cache, filter, actionMode])
 
   // this is the core "reset" effect
   // for when the chosen category changes
@@ -577,7 +654,7 @@ function StarwarsTable({category, changeCategory}:Props) {
     setFilter("");
     setLoading(true);
     setSelectedLocalPage(1);
-    setColumns( [...sharedColumnsFront as any, ...GetColumns(category), ...sharedColumnsBack as any]);
+    setColumns([...sharedColumnsFront, ...GetColumns(category), ...sharedColumnsBack]);
 
     selectedRecordReference.current =([]);
 
@@ -597,11 +674,11 @@ function StarwarsTable({category, changeCategory}:Props) {
   // we keep the reference to the scroll container fresh here
   useEffect(() => {
     //focusedRecordStore.AddTracker("peopleStore", 2);
-    console.log("Table ref:", tableRef.current);
+    //console.log("Table ref:", tableRef.current);
     let scrollContainer = tableRef.current.querySelector(".ant-table-content");
     function SaveHorizontalScroll() {
       if (scrollContainer) {
-        console.log("Storing scroll: ", scrollContainer.scrollLeft);
+        //console.log("Storing scroll: ", scrollContainer.scrollLeft);
         horizontalScroll.current = (scrollContainer.scrollLeft);
       }
     }
@@ -678,20 +755,32 @@ function StarwarsTable({category, changeCategory}:Props) {
     return result;
   }
 
+  function DisplayBarGraph() {
+
+  }
+
   function BuildFooter():any {
 
     return (
       <TableFooter>
-        <Button
-            onClick={() => LoadRemainingPages(starwarsStore[category] as SWStore<any>)}
-          >
-            Load All Data
-        </Button>
+        <Space>
+          <Button
+              onClick={() => LoadRemainingPages(starwarsStore[category] as SWStore<any>)}
+            >
+              Load All Data
+          </Button>
+          <Button
+              onClick={LoadNextPage}
+            >
+              Load More Data
+          </Button>
+        </Space>
+
 
         <Button
-            onClick={LoadNextPage}
+            onClick={DisplayBarGraph}
           >
-            Load More Data
+            Show In Graph
         </Button>
       </TableFooter>
     )
@@ -731,14 +820,17 @@ function StarwarsTable({category, changeCategory}:Props) {
   {
     for (let x = 0; x < deletedRecordStore[category].length; x++) {
       let id = deletedRecordStore[category][x];
-      starwarsStore[category].get(id,false);
+      if (selectedRecordReference.current.indexOf(id) != -1) 
+      {
+        starwarsStore[category].get(id,false);
+        deletedRecordStore.RemoveTracker(category,id);
+      }
     }
-    deletedRecordStore.Clear(category);
   }
 
   return (
     <ContainerStyle>
-      <div className={"App" + (loading ? "" : "")}>
+      <div data-action-mode={actionMode} data-view-mode={viewMode} className={"App" + (loading ? "" : "")}>
         <SpinFC size="large" spinning={loading}>
           <div className='headerContainer'>
             <span className='searchInput'>
@@ -757,8 +849,56 @@ function StarwarsTable({category, changeCategory}:Props) {
               }
             </span>
             <span className='actionButtons'>
-              <Button onClick={HandleRestore} disabled={deletedRecordStore[category].length == 0} className='restoreButton'>Restore</Button>
-              <Button onClick={HandleDelete} disabled={selectedRecordReference.current.length == 0} className='deleteButton'>Delete</Button>
+              {
+                actionMode == "Normal" ? 
+                <Select options={[
+                    {
+                      label: "Normal",
+                      value: "Normal",
+                    },
+                    {
+                      label: "Delete",
+                      value: "Delete",
+                    },
+                    {
+                      label: "Restore",
+                      value: "Restore",
+                    }
+                  ]}
+                  value={actionMode}
+                  onChange={(val) => setActionMode(val)}
+                /> :
+                <Space>
+                  <Button onClick={(e) => {
+                      selectedRecordReference.current = [];
+                      setActionMode("Normal");
+                    }} 
+                    className='deleteButton'
+                  >
+                    Cancel
+                  </Button>
+                  <Button className='restoreButton'
+                    onClick={(e) => {
+                      if (selectedRecordReference.current.length == 0) 
+                      {
+                        message.error("No records are selected.");
+                        message.info(`Click cancel to exit ${actionMode} mode`);
+                        return;
+                      }
+                      if (actionMode == "Delete") {
+                        HandleDelete();
+                      } else if (actionMode == "Restore") {
+                        HandleRestore();
+                      }
+                      selectedRecordReference.current = [];
+                      setActionMode("Normal");
+                    }}
+                  >
+                    Confirm
+                  </Button>
+                </Space>
+              }
+
             </span>
           </div>
           <Table
@@ -782,6 +922,7 @@ function StarwarsTable({category, changeCategory}:Props) {
               current: selectedLocalPage,
               defaultPageSize: pageSize,
               pageSize: pageSize,
+              pageSizeOptions: [5,10,15,20,50,100],
               size: "default",
               position: ["bottomCenter"],
               onChange: (pageIndex, pageSize) => { setSelectedLocalPage(pageIndex); setPageSize(pageSize) },
@@ -809,6 +950,7 @@ function StarwarsTable({category, changeCategory}:Props) {
               (record,index) => {
                 return {
                   onClick: (e) => {
+                    if (actionMode == "Normal") { return; }
                     e.stopPropagation();
                     let mutableSelectedRecords = [...selectedRecordReference.current];
                     let id = ExtractID(record.url);

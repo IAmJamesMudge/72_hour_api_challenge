@@ -317,7 +317,15 @@ export const useStarWarsStores = () => {
   }
 }
 
-export function FilterStoreData(data:any[], filter:string = "", filterFields:string[] = [],deletedIDs:number[] = [], focusedIDs:number[] = [], removeNullUndefinedEmpty?:boolean) 
+export function FilterStoreData(
+    data:any[], 
+    filter:string = "", 
+    filterFields:string[] = [],
+    deletedIDs:number[] = [], 
+    focusedIDs:number[] = [], 
+    removeNullUndefinedEmpty:boolean = false,
+    mode:"Normal"|"Delete"|"Restore" = "Normal"
+  ) 
 {
   //NOTE: consider using immer.js for better immutability handling
   let dataCopy = JSON.parse(JSON.stringify(data)) as any[];
@@ -328,35 +336,52 @@ export function FilterStoreData(data:any[], filter:string = "", filterFields:str
     dataCopy = dataCopy.filter((d) => !(d == null || d == undefined || d == ""));
   }
 
-  //remove deleted
-  for (let x = 0; x < dataCopy.length; x++) 
-  {
-    let record = dataCopy[x];
-    let index = deletedIDs.indexOf(ExtractID(record.url));
-    if (index == -1) {
-      // the record ID is not in the deletedID array
-    } else {
-      dataCopy.splice(x,1);
-      x--;
-      continue;
-    }
-  }
-
-  //remove NOT focused, if we have any focused
-  if (focusedIDs.length > 0) {
+  if (mode == "Restore") {
+    // in restore mode, we want to see only the deleted records so that we can restore them
     for (let x = 0; x < dataCopy.length; x++) {
       let record = dataCopy[x];
-      let index = focusedIDs.indexOf(ExtractID(record.url));
+      let index = deletedIDs.indexOf(ExtractID(record.url));
       if (index == -1) {
-        // the record ID is NOT being focused. Remove from array
+        // this ID is NOT deleted. We do not want to see it in restore mode.
         dataCopy.splice(x,1);
         x--;
         continue;
-      } else {
-        // the record IS is focused. Keep it in the array.
       }
     }
+  } else {
+    // the mode is NOT restore, so we want to show all non-deleted records
+
+      //remove deleted
+      for (let x = 0; x < dataCopy.length; x++) 
+      {
+        let record = dataCopy[x];
+        let index = deletedIDs.indexOf(ExtractID(record.url));
+        if (index == -1) {
+          // the record ID is not in the deletedID array
+        } else {
+          dataCopy.splice(x,1);
+          x--;
+          continue;
+        }
+      }
+
+      //remove NOT focused, if we have any focused
+      if (focusedIDs.length > 0) {
+        for (let x = 0; x < dataCopy.length; x++) {
+          let record = dataCopy[x];
+          let index = focusedIDs.indexOf(ExtractID(record.url));
+          if (index == -1) {
+            // the record ID is NOT being focused. Remove from array
+            dataCopy.splice(x,1);
+            x--;
+            continue;
+          } else {
+            // the record IS is focused. Keep it in the array.
+          }
+        }
+      }
   }
+
 
   
   if (filter == undefined || filter == null || filter == "") 
