@@ -24,7 +24,6 @@ const storeToSearchableFields:Map<StoreType,string[]> = new Map([
 const ContainerStyle = styled.div`
   .App {
     position: relative;
-    max-width: 950px;
     margin: 12px;
     padding: 2px 6px;
     border: 1px solid rgba(170,170,170,0.2);
@@ -361,6 +360,9 @@ function StarwarsTable({category, changeCategory}:Props) {
         allPossibleOptions.forEach((option, index) => {
           if (Object.hasOwn(record,option.toLowerCase())) {
             let val = record[option.toLowerCase()] as Array<any>;
+            if (val == undefined || val == null) {
+              return;
+            }
             if (val.length > 0){
               processedOptions.push({
                 label: option,
@@ -828,8 +830,8 @@ function StarwarsTable({category, changeCategory}:Props) {
           />
         </SpinFC>
       </div>
-        <button onClick={() => { console.log("Test running"); starwarsStore[category].getPage(parseInt(window.prompt("Page") ?? "0"),false)}}>Load Page</button>
-        <button onClick={() => { setLoading(!loading) }}>Toggle Loading</button>
+        {/* <button onClick={() => { console.log("Test running"); starwarsStore[category].getPage(parseInt(window.prompt("Page") ?? "0"),false)}}>Load Page</button>
+        <button onClick={() => { setLoading(!loading) }}>Toggle Loading</button> */}
     </ContainerStyle>
 
   );

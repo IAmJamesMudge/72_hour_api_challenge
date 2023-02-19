@@ -568,13 +568,13 @@ const speciesColumns:ColumnsType<Species> = [
     key: "designation",
   },
   {
-    title: "Avg Height",
+    title: "Average Height",
     dataIndex: "average_height",
     key: "average_height",
   },
   {
-    title: "Avg Lifespan",
-    dataIndex: "average_lifespawn",
+    title: "Average Lifespan",
+    dataIndex: "average_lifespan",
     key: "average_lifespan",
   },
   {
@@ -584,11 +584,11 @@ const speciesColumns:ColumnsType<Species> = [
     render: (text,record,index) => {
       return <>
         <Popover content={
-          <>
+          <div>
             {
-              record.eye_colors.split(",").map(c => <div>{c}</div>)
+              record.eye_colors.split(",").map((c,i) => <div key={i}>{c}</div>)
             }
-          </>
+          </div>
         } title={`${record.name} eye colors`} 
           trigger="click"
         >
@@ -605,11 +605,11 @@ const speciesColumns:ColumnsType<Species> = [
     render: (text,record,index) => {
       return <>
         <Popover content={
-          <>
+          <div>
             {
-              record.hair_colors.split(",").map(c => <div>{c}</div>)
+              record.hair_colors.split(",").map((c,i) => <div key={i}>{c}</div>)
             }
-          </>
+          </div>
         } title={`${record.name} hair colors`} 
           trigger="click"
         >
@@ -624,20 +624,20 @@ const speciesColumns:ColumnsType<Species> = [
     dataIndex: "skin_colors",
     key: "skin_colors",
     render: (text,record,index) => {
-      return <>
+      return <div>
         <Popover content={
-          <>
+          <div>
             {
-              record.skin_colors.split(",").map(c => <div>{c}</div>)
+              record.skin_colors.split(",").map((c,i) => <div key={i}>{c}</div>)
             }
-          </>
+          </div>
         } title={`${record.name} skin colors`} 
           trigger="click"
         >
           <Button onClick={(e) => e.stopPropagation() } type="link">Details</Button>
         </Popover>
         
-      </>
+      </div>
     }
   },
   {
@@ -723,7 +723,36 @@ const starshipColumns:ColumnsType<Starship> = [
     title: "Consumable Duration",
     dataIndex: "consumables",
     key: "consumables",
-    sorter: (a,b) => parseFloat(a.consumables) < parseFloat(b.consumables) ? -1 : 1
+    sorter: (a,b) => {
+      let f0 = parseFloat(a.consumables);
+      let f1 = parseFloat(b.consumables);
+
+      let weekMultiplera = a.consumables.indexOf("week") != -1;
+      let monthMultipliera = a.consumables.indexOf("month") != -1;
+      let yearMultipliera = a.consumables.indexOf("year") != -1;
+
+      let weekMultiplerb = b.consumables.indexOf("week") != -1;
+      let monthMultiplierb = b.consumables.indexOf("month") != -1;
+      let yearMultiplierb = b.consumables.indexOf("year") != -1;
+
+      if (yearMultipliera) {
+        f0 *= 365;
+      } else if (monthMultipliera) {
+        f0 *= 30;
+      } else if (weekMultiplera) {
+        f0 *= 7;
+      }
+
+      if (yearMultiplierb) {
+        f1 *= 365;
+      } else if (monthMultiplierb) {
+        f1 *= 30;
+      } else if (weekMultiplerb) {
+        f1 *= 7;
+      }
+
+      return f1 > f0 ? -1: 1;
+    }
   }
 
 ]
