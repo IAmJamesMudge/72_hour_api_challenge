@@ -455,7 +455,8 @@ function StarwarsTable({category, changeCategory}:Props) {
         return (
           <DeleteOutlined onClick={handleClick} className='trash icon'/>
         )
-      }
+      },
+      width: 75
     }
   ];
   const sharedColumnsBack:ColumnsType<any> = [

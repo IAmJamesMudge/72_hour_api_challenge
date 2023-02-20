@@ -520,18 +520,21 @@ const peopleColumns:ColumnsType<People> = [
     title: "Born",
     dataIndex: "birth_year",
     key: "birth_year",
+    width: 120
   },
   {
     title: "Height",
     dataIndex: "height",
     key: "height",
     sorter: (a,b) => parseFloat(a.height) < parseFloat(b.height) ? 1 : -1,
+    width: 75
   },
   {
     title: "Mass",
     dataIndex: "mass",
     key: "mass",
-    sorter: (a,b) => parseFloat(a.mass) < parseFloat(b.mass) ? 1 : -1
+    sorter: (a,b) => parseFloat(a.mass) < parseFloat(b.mass) ? 1 : -1,
+    width: 75
   },
   {
     title: "Hair",
@@ -544,7 +547,8 @@ const peopleColumns:ColumnsType<People> = [
     title: "Skin",
     dataIndex: "skin_color",
     key: "skin_color",
-    sorter: (a,b) => (a.skin_color) < (b.skin_color) ? 1 : -1
+    sorter: (a,b) => (a.skin_color) < (b.skin_color) ? 1 : -1,
+    width: 80
   },
   {
     title: "Eyes",
@@ -568,12 +572,14 @@ const filmColumns:ColumnsType<Film> = [
     key: "title",
     render: (text) => <span>{text}</span>,
     sorter: (a,b) => a.title < b.title ? -1 : 1,
+    width: 120
   },
   {
     title: "Episode",
     dataIndex: "episode_id",
     key: "episode_id",
     sorter: (a,b) => a.episode_id < b.episode_id ? -1 : 1,
+    width: 90
   },
   {
     title: "Opening",
@@ -581,26 +587,30 @@ const filmColumns:ColumnsType<Film> = [
     key: "opening_crawl",
     render: (text) => <>
       <Popover content={<Card>{text}</Card>} title="Opening Crawl" trigger="click">
-        <Button onClick={(e) => e.stopPropagation() } type="link">Details</Button>
+        <Button style={{position: "relative", left: "-15px"}} onClick={(e) => e.stopPropagation() } type="link">Details</Button>
       </Popover>
-    </>
+    </>,
+    width: 90
   },
   {
     title: "Director",
     dataIndex: "director",
     key: "director",
-    sorter: (a,b) => a.director < b.director ? -1 : 1
+    sorter: (a,b) => a.director < b.director ? -1 : 1,
+    width: 120
   },
   {
     title: "Producer",
     dataIndex: "producer",
     key: "producer",
-    sorter: (a,b) => a.producer < b.producer ? -1 : 1
+    sorter: (a,b) => a.producer < b.producer ? -1 : 1,
+    width: 120
   },
   {
     title: "Released",
     dataIndex: "release_data",
     key: "release_data",
+    width: 120,
     render: (text, record) => {
       
       return <>
@@ -621,55 +631,64 @@ const planetColumns:ColumnsType<Planet> = [
     dataIndex: "name",
     key: "name",
     render: (text) => <span>{text}</span>,
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120,
   },
   {
     title: "Diameter",
     dataIndex: "diameter",
     key: "diameter",
-    sorter: (a,b) => parseFloat(a.diameter) < parseFloat(b.diameter) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.diameter) < parseFloat(b.diameter) ? -1 : 1,
+    width: 90
   },
   {
     title: "Rotation Period",
     dataIndex: "rotation_period",
     key: "rotation_period",
-    sorter: (a,b) => parseFloat(a.rotation_period) < parseFloat(b.rotation_period) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.rotation_period) < parseFloat(b.rotation_period) ? -1 : 1,
+    width: 120
   },
   {
     title: "Orbital Period",
     dataIndex: "orbital_period",
     key: "orbital_period ",
-    sorter: (a,b) => parseFloat(a.orbital_period )< parseFloat(b.orbital_period) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.orbital_period )< parseFloat(b.orbital_period) ? -1 : 1,
+    width: 120
   },
   {
     title: "Gravity",
     dataIndex: "gravity",
     key: "gravity",
-    sorter: (a,b) => parseFloat(a.gravity) < parseFloat(b.gravity) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.gravity) < parseFloat(b.gravity) ? -1 : 1,
+    width: 90
   },
   {
     title: "Population",
     dataIndex: "population",
     key: "population",
-    sorter: (a,b) => parseFloat(a.population) < parseFloat(b.population) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.population) < parseFloat(b.population) ? -1 : 1,
+    width: 120
   },
   {
     title: "Surface Water",
     dataIndex: "surface_water",
     key: "surface_water",
-    sorter: (a,b) => parseFloat(a.surface_water) < parseFloat(b.surface_water) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.surface_water) < parseFloat(b.surface_water) ? -1 : 1,
+    width: 90
   },
   {
     title: "Climate",
     dataIndex: "climate",
     key: "climate",
-    sorter: (a,b) => a.climate < b.climate ? -1 : 1
+    sorter: (a,b) => a.climate < b.climate ? -1 : 1,
+    width: 120
   },
   {
     title: "Terrain",
     dataIndex: "terrain",
     key: "terrain",
-    sorter: (a,b) => a.terrain < b.terrain ? -1 : 1
+    sorter: (a,b) => a.terrain < b.terrain ? -1 : 1,
+    width: 120
   }
 
 ]
@@ -678,31 +697,37 @@ const speciesColumns:ColumnsType<Species> = [
     title: "Name",
     dataIndex: "name",
     key: "name",
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120
   },
   {
     title: "Class",
     dataIndex: "classification",
-    key: "classification"
+    key: "classification",
+    width: 120
   },
   {
     title: "Designation",
     dataIndex: "designation",
     key: "designation",
+    width: 120
   },
   {
     title: "Height (average)",
     dataIndex: "average_height",
     key: "average_height",
+    width: 120
   },
   {
     title: "Lifespan (average)",
     dataIndex: "average_lifespan",
     key: "average_lifespan",
-    sorter: lifespanSorter
+    sorter: lifespanSorter,
+    width: 120
   },
   {
     title: "Eye Colors",
+    width: 75,
     dataIndex: "eye_colors",
     key: "eye_colors",
     render: (text,record,index) => {
@@ -716,7 +741,7 @@ const speciesColumns:ColumnsType<Species> = [
         } title={`${record.name} eye colors`} 
           trigger="click"
         >
-          <Button onClick={(e) => e.stopPropagation() } type="link">Details</Button>
+          <Button style={{position: "relative", left: "-20px"}} onClick={(e) => e.stopPropagation() } type="link">Details</Button>
         </Popover>
         
       </>
@@ -724,6 +749,7 @@ const speciesColumns:ColumnsType<Species> = [
   },
   {
     title: "Hair Colors",
+    width: 75,
     dataIndex: "hair_colors",
     key: "hair_colors",
     render: (text,record,index) => {
@@ -737,7 +763,7 @@ const speciesColumns:ColumnsType<Species> = [
         } title={`${record.name} hair colors`} 
           trigger="click"
         >
-          <Button onClick={(e) => e.stopPropagation() } type="link">Details</Button>
+          <Button style={{position: "relative", left: "-20px"}} onClick={(e) => e.stopPropagation() } type="link">Details</Button>
         </Popover>
         
       </>
@@ -745,6 +771,7 @@ const speciesColumns:ColumnsType<Species> = [
   },
   {
     title: "Skin Colors",
+    width: 75,
     dataIndex: "skin_colors",
     key: "skin_colors",
     render: (text,record,index) => {
@@ -758,7 +785,7 @@ const speciesColumns:ColumnsType<Species> = [
         } title={`${record.name} skin colors`} 
           trigger="click"
         >
-          <Button onClick={(e) => e.stopPropagation() } type="link">Details</Button>
+          <Button style={{position: "relative", left: "-20px"}} onClick={(e) => e.stopPropagation() } type="link">Details</Button>
         </Popover>
         
       </div>
@@ -767,7 +794,8 @@ const speciesColumns:ColumnsType<Species> = [
   {
     title: "Language",
     dataIndex: "language",
-    key: "language"
+    key: "language",
+    width: 120
   }
 ]
 const starshipColumns:ColumnsType<Starship> = [
@@ -782,13 +810,15 @@ const starshipColumns:ColumnsType<Starship> = [
     title: "Model",
     dataIndex: "model",
     key: "model",
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120
   },
   {
     title: "Class",
     dataIndex: "starship_class",
     key: "starship_class",
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120
   },
   {
     title: "Manufacturer",
@@ -801,55 +831,64 @@ const starshipColumns:ColumnsType<Starship> = [
     title: "Cost",
     dataIndex:"cost_in_credits",
     key: "cost_in_credits",
-    sorter: (a,b) => parseFloat(a.cost_in_credits) < parseFloat(b.cost_in_credits) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.cost_in_credits) < parseFloat(b.cost_in_credits) ? -1 : 1,
+    width: 80
   },
   {
     title: "Length",
     dataIndex: "length",
     key: "length",
-    sorter: (a,b) => parseFloat(a.length) < parseFloat(b.length) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.length) < parseFloat(b.length) ? -1 : 1,
+    width: 80
   },
   {
     title: "Crew",
     dataIndex: "crew",
     key: "crew",
-    sorter: (a,b) => parseFloat(a.crew) < parseFloat(b.crew) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.crew) < parseFloat(b.crew) ? -1 : 1,
+    width: 80
   },
   {
     title: "Passengers",
     dataIndex: "passengers",
     key: "passengers",
-    sorter: (a,b) => parseFloat(a.passengers) < parseFloat(b.passengers) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.passengers) < parseFloat(b.passengers) ? -1 : 1,
+    width: 80
   },
   {
     title: "Atmosphering Speed",
     dataIndex: "max_atmosphering_speed",
     key: "max_atmosphering_speed",
-    sorter: (a,b) => parseFloat(a.max_atmosphering_speed) < parseFloat(b.max_atmosphering_speed) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.max_atmosphering_speed) < parseFloat(b.max_atmosphering_speed) ? -1 : 1,
+    width: 95
   },
   {
     title: "Hyperdrive Rating",
     dataIndex: "hyperdrive_rating",
     key: "hyperdrive_rating",
-    sorter: (a,b) => a.hyperdrive_rating < b.hyperdrive_rating ? -1 : 1
+    sorter: (a,b) => a.hyperdrive_rating < b.hyperdrive_rating ? -1 : 1,
+    width: 80
   },
   {
     title: "MGLT",
     dataIndex: "MGLT",
     key: "MGLT",
-    sorter: (a,b) => parseFloat(a.MGLT) < parseFloat(b.MGLT) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.MGLT) < parseFloat(b.MGLT) ? -1 : 1,
+    width: 80
   },
   {
     title: "Cargo Capacity",
     dataIndex: "cargo_capacity",
     key: "cargo_capacity",
-    sorter: (a,b) => parseFloat(a.cargo_capacity) < parseFloat(b.cargo_capacity) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.cargo_capacity) < parseFloat(b.cargo_capacity) ? -1 : 1,
+    width: 85
   },
   {
     title: "Consumable Duration",
     dataIndex: "consumables",
     key: "consumables",
-    sorter: consumableSorter
+    sorter: consumableSorter,
+    width: 90
   }
 
 ]
@@ -858,19 +897,22 @@ const vehicleColumns:ColumnsType<Vehicle> = [
     title: "Name",
     dataIndex: "name",
     key:"name",
-    sorter: (a,b) => (a.name) < (b.name) ? -1 : 1
+    sorter: (a,b) => (a.name) < (b.name) ? -1 : 1,
+    width: 120
   },
   {
     title:"Model",
     dataIndex:"model",
     key:"model",
-    sorter: (a,b) => (a.model) < (b.model) ? -1 : 1
+    sorter: (a,b) => (a.model) < (b.model) ? -1 : 1,
+    width: 120
   },
   {
     title:"Class",
     dataIndex:"vehicle_class",
     key:"vehicle_class",
-    sorter: (a,b) => (a.vehicle_class) < (b.vehicle_class) ? -1 : 1
+    sorter: (a,b) => (a.vehicle_class) < (b.vehicle_class) ? -1 : 1,
+    width: 120
   },
   {
     title: "Manufacturer",
@@ -883,43 +925,50 @@ const vehicleColumns:ColumnsType<Vehicle> = [
     title: "Cost",
     dataIndex:"cost_in_credits",
     key: "cost_in_credits",
-    sorter: (a,b) => parseFloat(a.cost_in_credits) < parseFloat(b.cost_in_credits) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.cost_in_credits) < parseFloat(b.cost_in_credits) ? -1 : 1,
+    width: 120
   },
   {
     title: "Length",
     dataIndex: "length",
     key: "length",
-    sorter: (a,b) => parseFloat(a.length) < parseFloat(b.length) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.length) < parseFloat(b.length) ? -1 : 1,
+    width: 120
   },
   {
     title: "Crew",
     dataIndex: "crew",
     key: "crew",
-    sorter: (a,b) => parseFloat(a.crew) < parseFloat(b.crew) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.crew) < parseFloat(b.crew) ? -1 : 1,
+    width: 120
   },
   {
     title: "Passengers",
     dataIndex: "passengers",
     key: "passengers",
-    sorter: (a,b) => parseFloat(a.passengers) < parseFloat(b.passengers) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.passengers) < parseFloat(b.passengers) ? -1 : 1,
+    width: 120
   },
   {
     title: "Atmosphering Speed",
     dataIndex: "max_atmosphering_speed",
     key: "max_atmosphering_speed",
-    sorter: (a,b) => parseFloat(a.max_atmosphering_speed) < parseFloat(b.max_atmosphering_speed) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.max_atmosphering_speed) < parseFloat(b.max_atmosphering_speed) ? -1 : 1,
+    width: 125
   },
   {
     title: "Cargo Capacity",
     dataIndex: "cargo_capacity",
     key: "cargo_capacity",
-    sorter: (a,b) => parseFloat(a.cargo_capacity) < parseFloat(b.cargo_capacity) ? -1 : 1
+    sorter: (a,b) => parseFloat(a.cargo_capacity) < parseFloat(b.cargo_capacity) ? -1 : 1,
+    width: 120
   },
   {
     title: "Consumable Duration",
     dataIndex: "consumables",
     key: "consumables",
-    sorter: consumableSorter
+    sorter: consumableSorter,
+    width: 120
   }
   
 ]

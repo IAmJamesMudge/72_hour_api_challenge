@@ -199,7 +199,7 @@ const starwarsCategories = [
   { storeKey: "peopleStore", label: "People", svg: <UserOutlined className="icon user" />},
   { storeKey: "starshipStore", label: "Starships", svg: <RocketSVG /> },
   { storeKey: "planetStore", label: "Planets", svg: <PlanetSVG />},
-  { storeKey: "speciesStore", label: "Species", svg: <SpeciesSVG /> },
+  { storeKey: "speciesStore", label: "Species", svg: <SpeciesSVG style={{position: "relative", top: "-5px"}} /> },
   { storeKey: "vehicleStore", label: "Vehicles", svg: <VehicleSVG /> },
   { storeKey: "filmStore", label: "Films", svg: <FilmSVG /> },
 ]
@@ -222,10 +222,13 @@ function App() {
         return globals.starwarsColor.rgb().toString();
     }
   }
+
+  const styleStarwars = {background: "transparent", overflow: "hidden", maxHeight: "calc(100vh - 17px)"};
+  const styleCats = {background: "transparent"};
   
   return (
     <Layout className="mainAppArea" style={{minHeight: "min(100vh,700px)", minWidth: "1150px", background: "white", zIndex: "1", position: "relative"}}>
-      <Layout style={{background: "transparent"}}>
+      <Layout style={dataChoice == "Starwars" ? styleStarwars : styleCats}>
         <div style={{width: siderWidth, height: "100vh"}}></div>
         <Sider width={siderWidth} style={{ position: "fixed", height: "100vh", backgroundColor: GetMainColor(), padding: "0px 16px", userSelect: "none"}}>
           <Header style={{background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", margin: "auto", padding: "0px"}}>
