@@ -734,6 +734,21 @@ function StarwarsTable({category, changeCategory}:Props) {
       console.log("Will about to search for:", searchValue);
       DoSearch(starwarsStore[category]  as SWStore<any>, searchValue);
     }
+      //NOTE: REMEMBER NOT TO MUTATE THE ARRAYS
+
+      const usableSharedColumnsFront:any = [];
+
+      switch (actionMode) {
+        case "None":
+          //we wantthe trashcan
+          usableSharedColumnsFront.push(sharedColumnsFront[1]);
+          break;
+        default:
+          usableSharedColumnsFront.push(sharedColumnsFront[0]);
+        break;
+  
+      }
+      setColumns([...usableSharedColumnsFront, ...GetColumns(category), ...sharedColumnsBack]);
 
   },[actionMode]);
 

@@ -206,7 +206,7 @@ const starwarsCategories = [
 
 function App() {
   const [storeKey, setStoreKey] = useState<"starshipStore" | "peopleStore" | "planetStore" | "speciesStore" | "vehicleStore" | "filmStore">("peopleStore");
-  const [dataChoice, setDataChoice] = useState<DataChoice>("Cats");
+  const [dataChoice, setDataChoice] = useState<DataChoice>("Starwars");
   const [siderWidth, setSiderWidth] = useState(250);
 
   function ChangeCategory (value:string) 
@@ -224,7 +224,7 @@ function App() {
   }
   
   return (
-    <Layout style={{minHeight: "100vh"}}>
+    <Layout className="mainAppArea" style={{minHeight: "min(100vh,700px)", minWidth: "1150px", background: "white", zIndex: "1", position: "relative"}}>
       <Layout style={{background: "transparent"}}>
         <div style={{width: siderWidth, height: "100vh"}}></div>
         <Sider width={siderWidth} style={{ position: "fixed", height: "100vh", backgroundColor: GetMainColor(), padding: "0px 16px", userSelect: "none"}}>
@@ -288,9 +288,11 @@ function App() {
         <Layout>
           <Content
             style={{
+              position: "relative",
               padding: 24,
               margin: 0,
               background: "white",
+              zIndex: 1
             }}
           >
             {

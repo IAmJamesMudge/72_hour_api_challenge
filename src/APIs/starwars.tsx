@@ -513,7 +513,8 @@ const peopleColumns:ColumnsType<People> = [
     dataIndex: "name",
     key: "name",
     render: (text) => <span>{text}</span>,
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120
   },
   {
     title: "Born",
@@ -536,7 +537,8 @@ const peopleColumns:ColumnsType<People> = [
     title: "Hair",
     dataIndex: "hair_color",
     key: "hair_color",
-    sorter: (a,b) => (a.hair_color) < (b.hair_color) ? 1 : -1
+    sorter: (a,b) => (a.hair_color) < (b.hair_color) ? 1 : -1,
+    width: 70
   },
   {
     title: "Skin",
@@ -548,13 +550,15 @@ const peopleColumns:ColumnsType<People> = [
     title: "Eyes",
     dataIndex: "eye_color",
     key: "eye_color",
-    sorter: (a,b) => (a.eye_color) < (b.eye_color) ? 1 : -1
+    sorter: (a,b) => (a.eye_color) < (b.eye_color) ? 1 : -1,
+    width: 80
   },
   {
     title: "Gender",
     dataIndex: "gender",
     key: "gender",
-    sorter: (a,b) => (a.gender) < (b.gender) ? 1 : -1
+    sorter: (a,b) => (a.gender) < (b.gender) ? 1 : -1,
+    width: 75
   }
 ]
 const filmColumns:ColumnsType<Film> = [
