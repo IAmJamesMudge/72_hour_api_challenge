@@ -436,7 +436,8 @@ function StarwarsTable({category, changeCategory}:Props) {
           }
         }
       },
-      className: "checkbox"
+      className: "checkbox",
+      width: 20
       
     },
     {
