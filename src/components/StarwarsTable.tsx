@@ -992,8 +992,8 @@ function StarwarsTable({category, changeCategory}:Props) {
                 actionMode == "None" ? 
                 <Select className='select' options={[
                     {
-                      label: "Normal",
-                      value: "Normal",
+                      label: "None",
+                      value: "None",
                     },
                     {
                       label: "Delete",
