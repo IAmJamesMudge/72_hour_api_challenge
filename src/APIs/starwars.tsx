@@ -213,6 +213,7 @@ function StoreGenerator<T extends SWBaseAPIRecord>(apiBase:string)
           // our api returns 10 records per page
           // thus, if our array already have members ((pageNumber-1)*10 through pageNumber*10 - 1)
           // we don't need to do another api request
+
           let store = get();
 
           if (!force) 
@@ -324,7 +325,7 @@ export function FilterStoreData(
     deletedIDs:number[] = [], 
     focusedIDs:number[] = [], 
     removeNullUndefinedEmpty:boolean = false,
-    mode:"Normal"|"Delete"|"Restore" = "Normal"
+    mode:"None"|"Delete"|"Restore" = "None"
   ) 
 {
   //NOTE: consider using immer.js for better immutability handling
@@ -399,7 +400,7 @@ export function FilterStoreData(
         if (typeof(fieldData) != "string") {continue;}
         //the data has the field that is filterable
         //we want to remove this record if the field doesn't match the filter
-        let index = fieldData.toLowerCase().indexOf(filter);
+        let index = fieldData.toLowerCase().indexOf(filter.toLowerCase());
         if (index == -1) {
           // filter was not found on this field
           dataCopy.splice(x,1);
@@ -413,12 +414,105 @@ export function FilterStoreData(
   return dataCopy;
 }
 
+
+export const consumableSorter = (a:any,b:any) => {
+  let f0 = parseFloat(a.consumables);
+  let f1 = parseFloat(b.consumables);
+
+  let weekMultiplera = a.consumables.indexOf("week") != -1;
+  let monthMultipliera = a.consumables.indexOf("month") != -1;
+  let yearMultipliera = a.consumables.indexOf("year") != -1;
+
+  let weekMultiplerb = b.consumables.indexOf("week") != -1;
+  let monthMultiplierb = b.consumables.indexOf("month") != -1;
+  let yearMultiplierb = b.consumables.indexOf("year") != -1;
+
+  if (yearMultipliera) {
+    f0 *= 365;
+  } else if (monthMultipliera) {
+    f0 *= 30;
+  } else if (weekMultiplera) {
+    f0 *= 7;
+  }
+
+  if (yearMultiplierb) {
+    f1 *= 365;
+  } else if (monthMultiplierb) {
+    f1 *= 30;
+  } else if (weekMultiplerb) {
+    f1 *= 7;
+  }
+
+  return f1 > f0 ? -1: 1;
+};
+export const lifespanSorter = (a:any, b:any) => {
+  function QuickType(v:any) {
+    if (v.average_lifespan == "indefinite") {
+      return 999999;
+    }
+    if (v.average_lifespan == "unknown") {
+      return 0;
+    }
+    return parseFloat(v.average_lifespan);
+  }
+
+  let f0 = QuickType(a);
+  let f1 = QuickType(b);
+
+  return f1 > f0 ? -1 : 1;
+
+}
+
+export type ComparableFieldData = {
+  propertyName:string;
+  label:string;
+  sorter?: (a:any,b:any) => number
+}
+
+export const storeToComparableFields:Map<StoreType,ComparableFieldData[]> = new Map([
+  ["peopleStore",[
+      {propertyName:"height", label: "Height"},
+      {propertyName:"mass", label: "Mass"}
+  ]],
+  ["filmStore",[]],
+  ["planetStore",[
+      {propertyName:"diameter", label: "Diameter"},
+      {propertyName:"rotation_period", label: "Rotation Period"},
+      {propertyName:"orbital_period", label: "Orbital Period"},
+      {propertyName: "gravity", label: "Gravity", sorter: (a:Planet,b:Planet) => { return parseFloat(a.gravity) < parseFloat(b.gravity) ? -1 : 1 }},
+      {propertyName:"population", label: "Population"},
+      {propertyName:"surface_water", label: "Surface Water"},
+  ]],
+  ["starshipStore", [
+    {propertyName:"cost_in_credits", label: "Cost"},
+    {propertyName:"length", label: "Length"},
+    {propertyName:"crew", label: "Crew #"},
+    {propertyName:"passengers", label: "Passenger #"},
+    {propertyName:"max_atmosphering_speed", label: "Speed"},
+    {propertyName:"cargo_capacity", label: "Cargo Limit"},
+    {propertyName:"consumables", label: "Consumable Duration", sorter: consumableSorter}
+  ]],
+  ["vehicleStore", [
+    {propertyName:"cost_in_credits", label: "Cost"},
+    {propertyName:"length", label: "Length"},
+    {propertyName:"crew", label: "Crew #"},
+    {propertyName:"passengers", label: "Passenger #"},
+    {propertyName:"max_atmosphering_speed", label: "Speed"},
+    {propertyName:"cargo_capacity", label: "Cargo Limit"},
+    {propertyName:"consumables", label: "Consumable Duration", consumableSorter}
+  ]],
+  ["speciesStore",[
+    {propertyName:"average_height", label: "Height (average)"},
+    {propertyName:"average_lifespan", label: "Lifespan (average)", lifespanSorter},
+  ]]
+])
+
 const peopleColumns:ColumnsType<People> = [
   {
     title: "Name",
     dataIndex: "name",
     key: "name",
-    render: (text) => <b>{text}</b>,
+    render: (text) => <span>{text}</span>,
     sorter: (a,b) => a.name < b.name ? -1 : 1
   },
   {
@@ -468,7 +562,7 @@ const filmColumns:ColumnsType<Film> = [
     title: "Name",
     dataIndex: "title",
     key: "title",
-    render: (text) => <h3>{text}</h3>,
+    render: (text) => <span>{text}</span>,
     sorter: (a,b) => a.title < b.title ? -1 : 1,
   },
   {
@@ -522,7 +616,7 @@ const planetColumns:ColumnsType<Planet> = [
     title: "Name",
     dataIndex: "name",
     key: "name",
-    render: (text) => <b>{text}</b>,
+    render: (text) => <span>{text}</span>,
     sorter: (a,b) => a.name < b.name ? -1 : 1
   },
   {
@@ -593,14 +687,15 @@ const speciesColumns:ColumnsType<Species> = [
     key: "designation",
   },
   {
-    title: "Average Height",
+    title: "Height (average)",
     dataIndex: "average_height",
     key: "average_height",
   },
   {
-    title: "Average Lifespan",
+    title: "Lifespan (average)",
     dataIndex: "average_lifespan",
     key: "average_lifespan",
+    sorter: lifespanSorter
   },
   {
     title: "Eye Colors",
@@ -676,7 +771,8 @@ const starshipColumns:ColumnsType<Starship> = [
     title: "Name",
     dataIndex: "name",
     key: "name",
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120
   },
   {
     title: "Model",
@@ -694,7 +790,8 @@ const starshipColumns:ColumnsType<Starship> = [
     title: "Manufacturer",
     dataIndex:"manufacturer",
     key:"manufacturer",
-    sorter: (a,b) => a.name < b.name ? -1 : 1
+    sorter: (a,b) => a.name < b.name ? -1 : 1,
+    width: 120
   },
   {
     title: "Cost",
@@ -748,36 +845,7 @@ const starshipColumns:ColumnsType<Starship> = [
     title: "Consumable Duration",
     dataIndex: "consumables",
     key: "consumables",
-    sorter: (a,b) => {
-      let f0 = parseFloat(a.consumables);
-      let f1 = parseFloat(b.consumables);
-
-      let weekMultiplera = a.consumables.indexOf("week") != -1;
-      let monthMultipliera = a.consumables.indexOf("month") != -1;
-      let yearMultipliera = a.consumables.indexOf("year") != -1;
-
-      let weekMultiplerb = b.consumables.indexOf("week") != -1;
-      let monthMultiplierb = b.consumables.indexOf("month") != -1;
-      let yearMultiplierb = b.consumables.indexOf("year") != -1;
-
-      if (yearMultipliera) {
-        f0 *= 365;
-      } else if (monthMultipliera) {
-        f0 *= 30;
-      } else if (weekMultiplera) {
-        f0 *= 7;
-      }
-
-      if (yearMultiplierb) {
-        f1 *= 365;
-      } else if (monthMultiplierb) {
-        f1 *= 30;
-      } else if (weekMultiplerb) {
-        f1 *= 7;
-      }
-
-      return f1 > f0 ? -1: 1;
-    }
+    sorter: consumableSorter
   }
 
 ]
@@ -804,7 +872,8 @@ const vehicleColumns:ColumnsType<Vehicle> = [
     title: "Manufacturer",
     dataIndex:"manufacturer",
     key:"manufacturer",
-    sorter: (a,b) => a.manufacturer < b.manufacturer ? -1 : 1
+    sorter: (a,b) => a.manufacturer < b.manufacturer ? -1 : 1,
+    width: 120
   },
   {
     title: "Cost",
@@ -846,7 +915,7 @@ const vehicleColumns:ColumnsType<Vehicle> = [
     title: "Consumable Duration",
     dataIndex: "consumables",
     key: "consumables",
-    sorter: (a,b) => parseFloat(a.consumables) < parseFloat(b.consumables) ? -1 : 1
+    sorter: consumableSorter
   }
   
 ]

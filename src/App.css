@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+
+.dropdown svg {
+  position: relative;
+  left: 10px;
+  top: 5px;
+  width: 25px;
+  height: 25px;
+}

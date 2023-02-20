@@ -1,7 +1,7 @@
-import { Card, Checkbox, message, Popover, Select, Space, Table, Tag, Tooltip } from "antd";
+import { Card, Checkbox, message, Modal, Popover, Select, Space, Table, Tag, Tooltip } from "antd";
 import { ColumnGroupType, ColumnsType, ColumnType } from "antd/es/table";
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import {ExtractID, People,  StoreType,  SWBaseAPIRecord,  SWStore,  useStarWarsStores, FilterStoreData, GetColumnsImmutable} from "../APIs/starwars";
+import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from "react";
+import {ExtractID, People,  StoreType,  SWBaseAPIRecord,  SWStore,  useStarWarsStores, FilterStoreData, GetColumnsImmutable, storeToComparableFields} from "../APIs/starwars";
 import styled from "styled-components";
 import SpinFC from "antd/es/spin";
 import Input from "antd/es/input";
@@ -11,6 +11,9 @@ import { DefaultOptionType } from "antd/es/select";
 import useDeletedRecordTracker from "../Hooks/DeletedRecordTracker";
 import useFocusedRecorderTracker from "../Hooks/FocusRecordTracker";
 import useMessage from "antd/es/message/useMessage";
+import StarwarsBarChart from "./StarwarsChart";
+import SimpleModal from "./SimpleModal";
+import globals from "../Hooks/Globals";
 
 const storeToSearchableFields:Map<StoreType,string[]> = new Map([
   ["peopleStore",["name"]],
@@ -29,29 +32,44 @@ const ContainerStyle = styled.div`
     padding: 2px 6px;
     border: 1px solid rgba(170,170,170,0.2);
     transition: all 0.1s linear;
-
-
+    
     box-shadow: 0px 0px 4px 4px rgba(170,170,170,0.05) inset, 0px 0px 4px 4px rgba(170,170,170,0);
 
-    th.checkbox, td.checkbox {
-        display: none;
-    }
-    &[data-action-mode]:not([data-action-mode="Normal"]) {
-      th.checkbox, td.checkbox {
-        display: table-cell;
-      }
-    }
-    /* &[data-action-mode="Normal"] {
-      th.checkbox, td.checkbox {
-        width: 30px;
-      }
-    } */
 
-    &[data-action-mode]:not([data-action-mode="Normal"]) {
+    .ant-table-body 
+    {
+      &::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+      }
+      
+      &::-webkit-scrollbar-track {
+          border-radius: 8px;
+          background-color: #e7e7e7;
+          border: 1px solid #cacaca;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        border-radius: 8px;
+        border: 1.5px solid transparent;
+        background-clip: content-box;
+        background-color: rgb(63,85,109);
+      }
+    }
+    tr:nth-child(odd) { background: #eee }
+
+    th {
+      word-break: keep-all;
+    }
+    
+    .trash-column {
+      display: table-cell;
+    }
+    &[data-action-mode]:not([data-action-mode="None"]) {
       tr {
-      transition: all 0.1s linear;
-      box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.0) inset !important;
-      cursor: pointer;
+        transition: all 0.1s linear;
+        box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.0) inset !important;
+        cursor: pointer;
       & .ant-table-column-sort {
         background-color: transparent;
       }
@@ -75,9 +93,7 @@ const ContainerStyle = styled.div`
         box-shadow: 0px 0px 10px 10px rgba(100,100,255,0.075) inset !important;
         }
       }
-      th.trash-column, td.trash-column {
-        display: none;
-      }
+      
       & * {
         user-select: none;
       }
@@ -107,6 +123,31 @@ const ContainerStyle = styled.div`
     display: flex;
     flex-direction: row;
     justify-items: right;
+
+    .select {
+      position: relative;
+      width: 120px;
+      
+
+      &::before {
+        position: absolute;
+        content: "BULK ACTIONS";
+        width: auto;
+        left: 3px;
+        top: 50%;
+        transform: translate(-100%,-50%);
+        background-color: rgba(220,220,220,0.2);
+        padding: 4px 8px 3px 8px;
+        border-radius: 5px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border: 1px solid rgba(170,170,170,0.3);
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+    }
+
     & .deleteButton {
       color: rgba(220,20,20,1.0);
       border-color: red;
@@ -187,9 +228,6 @@ const ContainerStyle = styled.div`
   
   @media screen and (max-width: 768px)
   {
-    .App {
-      max-width: 400px;
-    }
   }
 `;
 
@@ -211,10 +249,8 @@ type SortedFieldType = {
 // the user can view data normally, search for data, or "Drill Down" a category
 // which will show the data on another table related to the drilled down record
 type FocusMode = "Normal"|"Drilldown"|"Search"|"SearchAndDrilldown";
-// the user can specifically view all data, the deleted data only, or the focused data only
-type ViewMode = "Normal"|"Deleted";
 // the user can either be viewing normally or selecting records
-type ActionMode = "Normal"|"Delete"|"Restore"
+type ActionMode = "None"|"Delete"|"Restore"
 type DrilldownDetail = {
   drilledCategory:StoreType;
   originalCategory:StoreType;
@@ -238,6 +274,7 @@ function StarwarsTable({category, changeCategory}:Props) {
   const selectedRecordReference = useRef<number[]>([]);
   const filteredCacheReference = useRef<SWBaseAPIRecord[]>([]);
   const [tableKey, setTableKey] = useState(0);
+  const [chartKey, setChartKey] = useState(0);
   const [searchValue, setSearchValue] = useState("");
   const deletedRecordStore = useDeletedRecordTracker();
   const focusedRecordStore = useFocusedRecorderTracker();
@@ -252,10 +289,14 @@ function StarwarsTable({category, changeCategory}:Props) {
   const drilldownRequest = useRef<DrilldownDetail|null>(null);
   const tableRef = useRef<HTMLDivElement>(null as any);
   const horizontalScroll = useRef(0);
-  const [viewMode, setViewMode] = useState<ViewMode>("Normal");
-  const [actionMode, setActionMode] = useState<ActionMode>("Normal");
+  const verticalScroll = useRef(0);
+  const [actionMode, setActionMode] = useState<ActionMode>("None");
   const sortedField = useRef<SortedFieldType>({field: "", direction: "ascend"});
   const lastClickedColData = useRef<ColumnGroupType<any> | ColumnType<any> | undefined>(undefined);
+  const [summaryData, setSummaryData] = useState<SWBaseAPIRecord[]>([]);
+  const [showBarGraph, setShowBarGraph] = useState(false);
+  const searchTimeout = useRef(-1);
+  const footerRef = useRef<HTMLDivElement>(null as any);
 
   const peopleColumns = GetColumnsImmutable("peopleStore");
   const filmColumns = GetColumnsImmutable("filmStore");
@@ -401,8 +442,6 @@ function StarwarsTable({category, changeCategory}:Props) {
     {
       title: "Delete",
       key: "delete",
-      //fixed: "left",
-      width: 200,
       className: "trash-column",
       render: (val, record, index) => {
 
@@ -421,6 +460,7 @@ function StarwarsTable({category, changeCategory}:Props) {
   ];
   const sharedColumnsBack:ColumnsType<any> = [
     {
+      width: 150,
       title: "Extras",
       key: "extras",
       render: (value, record, index) => {
@@ -449,7 +489,8 @@ function StarwarsTable({category, changeCategory}:Props) {
         })
 
         return (
-          <Select 
+          <Select
+            style={{width: 125}}
             value={"Jump To..."}
             options={processedOptions}
             onClick={
@@ -507,7 +548,7 @@ function StarwarsTable({category, changeCategory}:Props) {
                   originalCategory: category,
                   requestingRecord: record
                 }
-                setActionMode("Normal");
+                setActionMode("None");
 
                 changeCategory(val as any);
               }
@@ -578,7 +619,7 @@ function StarwarsTable({category, changeCategory}:Props) {
       case "Drilldown":
         message = 
         <div>
-          <Tag closable onClose={HandleClose} color="geekblue">
+          <Tag closable onClose={HandleClose} color={globals.starwarsColor.rgb().toString()}>
             {`Viewing Results For ${name} in ${prettyCategory.toUpperCase()}`}
           </Tag>
         </div>;
@@ -596,7 +637,7 @@ function StarwarsTable({category, changeCategory}:Props) {
             {`Viewing Search Results`}
           </div>
           <div>
-            <Tag closable onClose={HandleClose} color="geekblue">
+            <Tag closable onClose={HandleClose} color={globals.starwarsColor.rgb().toString()}>
               {`Viewing Results For ${name} in ${prettyCategory.toUpperCase()}`}
             </Tag>
           </div>
@@ -647,6 +688,9 @@ function StarwarsTable({category, changeCategory}:Props) {
     setFilteredCache(filteredData as SWBaseAPIRecord[]);
   },[deletedRecordStore, focusedRecordStore, category, starwarsStore[category].cache, filter, actionMode])
 
+  useEffect(() => {
+    setSummaryData(filteredCache);
+  },[filteredCache])
   // this is the core "reset" effect
   // for when the chosen category changes
   useEffect(() => {
@@ -654,18 +698,49 @@ function StarwarsTable({category, changeCategory}:Props) {
     setFilter("");
     setLoading(true);
     setSelectedLocalPage(1);
-    setColumns([...sharedColumnsFront, ...GetColumns(category), ...sharedColumnsBack]);
+ 
+    //NOTE: REMEMBER NOT TO MUTATE THE ARRAYS
+
+    const usableSharedColumnsFront:any = [];
+
+    switch (actionMode) {
+      case "None":
+        //we wantthe trashcan
+        usableSharedColumnsFront.push(sharedColumnsFront[1]);
+        break;
+      default:
+        usableSharedColumnsFront.push(sharedColumnsFront[0]);
+      break;
+
+    }
+    setColumns([...usableSharedColumnsFront, ...GetColumns(category), ...sharedColumnsBack]);
+
+    console.log("Will about to search for:", searchValue);
+    DoSearch(starwarsStore[category]  as SWStore<any>, searchValue);
 
     selectedRecordReference.current =([]);
 
     starwarsStore[category].getPage(1, false).then(() => {
       setLoading(false);
-    });
+    }).catch((e) => {
+      console.error(e);
+      message.error("Error connecting to server!");
+      setLoading(false);
+    })
   },[category])
+  useEffect(() => {
+
+    if (searchValue != "") {
+      console.log("Will about to search for:", searchValue);
+      DoSearch(starwarsStore[category]  as SWStore<any>, searchValue);
+    }
+
+  },[actionMode]);
 
   // any time we update the filter we want to run a search from the server
   // to check for records we don't hold locally
   useEffect(() => {
+    window.clearTimeout(searchTimeout.current);
     DoSearch(starwarsStore[category] as SWStore<any>, filter);
   },[filter])
 
@@ -675,25 +750,46 @@ function StarwarsTable({category, changeCategory}:Props) {
   useEffect(() => {
     //focusedRecordStore.AddTracker("peopleStore", 2);
     //console.log("Table ref:", tableRef.current);
-    let scrollContainer = tableRef.current.querySelector(".ant-table-content");
-    function SaveHorizontalScroll() {
+    let scrollContainer = tableRef.current.querySelector(".ant-table-body");
+    function SaveScroll() {
       if (scrollContainer) {
         //console.log("Storing scroll: ", scrollContainer.scrollLeft);
         horizontalScroll.current = (scrollContainer.scrollLeft);
+        verticalScroll.current = (scrollContainer.scrollTop);
       }
+
+      console.log("Saving scroll", horizontalScroll.current, verticalScroll.current);
     }
+    
+    
     if (scrollContainer) {
-      scrollContainer.addEventListener("scroll",SaveHorizontalScroll);
+      scrollContainer.addEventListener("scroll",SaveScroll);
       scrollContainer.scrollLeft = horizontalScroll.current;
+      scrollContainer.scrollTop = verticalScroll.current;
     }
     
 
     return () => {
       if (scrollContainer) { 
-        scrollContainer.removeEventListener("scroll",SaveHorizontalScroll); 
+        scrollContainer.removeEventListener("scroll",SaveScroll); 
       }
     }
   });
+
+  // useLayoutEffect(() => {
+  //   console.log("Table: ", tableRef.current);
+  //   let parent = tableRef.current.parentElement as HTMLElement;
+  //   let paginationRef = parent.querySelector("ul.ant-pagination");
+
+  //   console.log("Pagination ref:", paginationRef);
+
+  //   if (paginationRef) {
+  //     parent.appendChild(footerRef.current);
+  //     parent.appendChild(paginationRef);
+  //     console.log("Should do append");
+  //   }
+
+  // })
 
 
   function LoadNextPage() 
@@ -705,6 +801,10 @@ function StarwarsTable({category, changeCategory}:Props) {
       let nextPage = numLoaded + 1;
       starwarsStore[category].getPage(nextPage, false).then(() => {
         
+        setLoading(false);
+      }).catch((e) => {
+        console.error(e);
+        message.error("Error connecting to server!");
         setLoading(false);
       });
     }
@@ -749,6 +849,19 @@ function StarwarsTable({category, changeCategory}:Props) {
     setFilter(searchValue);
   }
 
+  // set a recurring timeout every time the user types in the search box
+  // this way if the user stops typing the search will go through,
+  // but we cancel the timeout when a search does go through
+  function HandleSearchValueChanged(e:React.ChangeEvent<HTMLInputElement>){
+
+    window.clearTimeout(searchTimeout.current);
+    setSearchValue(e.target.value);
+    
+    searchTimeout.current = window.setTimeout(() => {
+      setFilter(searchValue);
+    },1000)
+  }
+
   function IsOnLastPage() {
     let result = (GetNumberOfLoadedPages() < GetCurrentTotalPages() && selectedLocalPage == (Math.ceil(filteredCache.length / pageSize)));
 
@@ -756,14 +869,15 @@ function StarwarsTable({category, changeCategory}:Props) {
   }
 
   function DisplayBarGraph() {
-
+    setShowBarGraph(true);
+    setChartKey(s => (s + 1) % 20);
   }
 
   function BuildFooter():any {
 
     return (
-      <TableFooter>
-        <Space>
+      <TableFooter ref={footerRef}>
+        <Space style={GetNumberOfLoadedPages() >= GetCurrentTotalPages() ?  {opacity: 0, pointerEvents: "none", userSelect: "none"} : undefined}>
           <Button
               onClick={() => LoadRemainingPages(starwarsStore[category] as SWStore<any>)}
             >
@@ -777,11 +891,16 @@ function StarwarsTable({category, changeCategory}:Props) {
         </Space>
 
 
-        <Button
-            onClick={DisplayBarGraph}
-          >
-            Show In Graph
-        </Button>
+        {
+          storeToComparableFields.get(category) && (storeToComparableFields.get(category) as any[]).length > 0 ?
+          <Button
+              onClick={DisplayBarGraph}
+              style={{justifySelf: "right"}}
+            >
+              Show In Graph
+          </Button> : <></>
+        }
+
       </TableFooter>
     )
   }
@@ -822,7 +941,10 @@ function StarwarsTable({category, changeCategory}:Props) {
       let id = deletedRecordStore[category][x];
       if (selectedRecordReference.current.indexOf(id) != -1) 
       {
-        starwarsStore[category].get(id,false);
+        starwarsStore[category].get(id,false).catch(e => {
+          console.error(e);
+          message.error("Error retrieving data!");
+        });
         deletedRecordStore.RemoveTracker(category,id);
       }
     }
@@ -830,13 +952,13 @@ function StarwarsTable({category, changeCategory}:Props) {
 
   return (
     <ContainerStyle>
-      <div data-action-mode={actionMode} data-view-mode={viewMode} className={"App" + (loading ? "" : "")}>
+      <div data-action-mode={actionMode} className={"App" + (loading ? "" : "")}>
         <SpinFC size="large" spinning={loading}>
           <div className='headerContainer'>
             <span className='searchInput'>
               <Input
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
+                onChange={HandleSearchValueChanged}
                 onBlur={SetFilterOnBlur} 
                 onKeyDown={BlurOnReturn} 
                 addonBefore={BuildSearchAddon(searchValue)} 
@@ -850,8 +972,8 @@ function StarwarsTable({category, changeCategory}:Props) {
             </span>
             <span className='actionButtons'>
               {
-                actionMode == "Normal" ? 
-                <Select options={[
+                actionMode == "None" ? 
+                <Select className='select' options={[
                     {
                       label: "Normal",
                       value: "Normal",
@@ -871,7 +993,7 @@ function StarwarsTable({category, changeCategory}:Props) {
                 <Space>
                   <Button onClick={(e) => {
                       selectedRecordReference.current = [];
-                      setActionMode("Normal");
+                      setActionMode("None");
                     }} 
                     className='deleteButton'
                   >
@@ -891,7 +1013,7 @@ function StarwarsTable({category, changeCategory}:Props) {
                         HandleRestore();
                       }
                       selectedRecordReference.current = [];
-                      setActionMode("Normal");
+                      setActionMode("None");
                     }}
                   >
                     Confirm
@@ -912,11 +1034,11 @@ function StarwarsTable({category, changeCategory}:Props) {
                 }
               }
             }
+            sticky = {true}
             scroll={{
-              x: "auto",
-              
+              x: 0.7 * window.innerWidth,
+              y: 0.65 * window.innerHeight
             }}
-            
             key={tableKey}
             pagination={{
               current: selectedLocalPage,
@@ -936,7 +1058,7 @@ function StarwarsTable({category, changeCategory}:Props) {
             dataSource={filteredCache as any} 
             columns={columns as any} 
             rowKey={(d) => d ? ExtractID(d.url) : ""}
-            footer={GetNumberOfLoadedPages() >= GetCurrentTotalPages() ? undefined : BuildFooter}
+            footer={BuildFooter}
             rowClassName={
               (r:SWBaseAPIRecord) => {
                 let id = ExtractID(r.url);
@@ -950,7 +1072,7 @@ function StarwarsTable({category, changeCategory}:Props) {
               (record,index) => {
                 return {
                   onClick: (e) => {
-                    if (actionMode == "Normal") { return; }
+                    if (actionMode == "None") { return; }
                     e.stopPropagation();
                     let mutableSelectedRecords = [...selectedRecordReference.current];
                     let id = ExtractID(record.url);
@@ -968,12 +1090,23 @@ function StarwarsTable({category, changeCategory}:Props) {
                 }
               }
             }
+            onChange = {(pagination, filters, sorter, extra) => {
+              // this is the computed data the table is actually using
+              // we want to use this to form our bar graph
+              setSummaryData(extra.currentDataSource);
+              return undefined;
+            }}
             
           />
         </SpinFC>
+        <SimpleModal 
+          open={showBarGraph} 
+          onCancel={() => setShowBarGraph(false)}
+        >
+          <StarwarsBarChart key={chartKey} category={category} filteredSortedData={summaryData} />
+        </SimpleModal>
+
       </div>
-        {/* <button onClick={() => { console.log("Test running"); starwarsStore[category].getPage(parseInt(window.prompt("Page") ?? "0"),false)}}>Load Page</button>
-        <button onClick={() => { setLoading(!loading) }}>Toggle Loading</button> */}
     </ContainerStyle>
 
   );
