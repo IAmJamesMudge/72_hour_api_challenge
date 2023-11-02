@@ -1,46 +1,23 @@
-# Getting Started with Create React App
+## Overview
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project was developed within a tight 72-hour window as part of a coding challenge, with the primary focus on meticulously following client requirements and specifications. The task involved consuming an API and presenting the data in a user-friendly interface, emphasizing a strong user experience and a visually appealing design. The project showcases my ability to quickly understand and adhere to client needs, as well as my skills in front-end development and creating intuitive user interfaces.
 
-## Available Scripts
+## Live Demo
 
-In the project directory, you can run:
+To see the project in action, visit the following URL: [Live Demo](https://clubwealthassessment.firebaseapp.com/?_gl=1*svgqrh*_ga*NjQ3NzU1NTAyLjE2ODgxNDc3NzI.*_ga_CW55HF8NVT*MTY5ODk0Nzg2MS4xNzUuMS4xNjk4OTQ3ODcwLjUxLjAuMA..)
 
-### `npm start`
+## Installation and Usage
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Follow these steps to set up the project locally:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+1. Clone the repository:
+git clone https://github.com/iamjamesmudge/72_hour_api_challenge.git
 
-### `npm test`
+2. Navigate to the project directory:
+cd 72_hour_api_challenge
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+3. Install the dependencies:
+npm install
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+4. Start the development server:
+npm run dev
